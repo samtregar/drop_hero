@@ -1,0 +1,16 @@
+{
+    "title": "Episode Title Here",
+    "mp3": "eps/TGGS7E04.1.mp3",
+    "drops": [
+        { "at": 5,
+          "drop": "Drunk Shimoda",
+          "alts": ["Picard Song"]
+        },
+        { "at": 30,
+          "drop": "Airhorn"
+        },
+        { "at": 50,
+          "drop": "Phaser Spread"
+        }
+    ]
+}
