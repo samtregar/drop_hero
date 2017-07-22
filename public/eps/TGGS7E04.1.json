@@ -10,7 +10,12 @@
           "drop": "Airhorn"
         },
         { "at": 50,
-          "drop": "Phaser Spread"
+          "drop": "Phaser Spread",
+          "alts": ["Explosion", "Bohemian Rhapsody", "Baker Street"]
+        },
+        { "at": 70,
+          "drop": "My Son",
+          "alts": ["Baker Street"]
         }
     ]
 }

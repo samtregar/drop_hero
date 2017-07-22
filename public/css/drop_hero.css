@@ -14,3 +14,20 @@
 .top15 { margin-top:15px; }
 .top17 { margin-top:17px; }
 .top30 { margin-top:30px; }
+
+.controls {
+    min-height: 3em;
+    min-width: 3em;
+    align-items:center;
+}
+.controls img {
+    min-width: 100%;
+    min-height: 100%;
+}
+
+.buttons {
+    min-height: 5em;
+    min-width: 20%;
+    padding-top: 0.5em;
+    align-items:center;
+}

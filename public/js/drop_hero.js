@@ -10,19 +10,31 @@ function DropHero(episode) {
     var TARGET_LENGTH = 3;
 
     $(document).ajaxError(function(event, request, settings){
-        console.log(["AJAX Error", event, request]);
+        window.console && console.log(["AJAX Error", event, request]);
     });
     
     // load up drops and pod mp3 async-like
     var drops, drop_index, next_drop;
+    var all_drops = [];
     $.getJSON(drop_url,
               {},
               function(data) {
-                  console.log(data);
                   drops = data['drops'];
                   drop_index = 0;
                   next_drop = drops[drop_index];
-                  pod = new Howl({ src: [data['mp3']] });
+
+                  // collect all drops and alts for use as dummy answers
+                  for(var i = 0; i < drops.length; i++) {
+                      all_drops.push(drops[i]['drop']);
+                      if (drops[i]['alts']) {
+                          all_drops.push.apply(all_drops, drops[i]['alts']);
+                      }
+                  }
+                  
+                  pod = new Howl({
+                      'src': [data['mp3']],
+                      'html5': true
+                  });
               });
     
     var progressbar = $( "#progressbar" );
@@ -51,6 +63,13 @@ function DropHero(episode) {
         }
         return array;
     };
+
+    this.unique = function(input) {
+        var o = {}, a = [];
+        for (var i = 0; i < input.length; i++) o[input[i]] = 1;
+        for (var e in o) a.push(e);
+        return a;
+    }
     
     this.do_tick = function() {
         var dur = pod.duration();
@@ -60,7 +79,7 @@ function DropHero(episode) {
         }
 
         dist = Math.abs(pos - next_drop['at']);
-        console.log(["DIST", dist]);
+        console.log(["DIST", pos, next_drop['at'], dist]);
         if (dist <= SHOW_BUTTON_DUR && !buttons_showing) {
             this.show_buttons();
         } 
@@ -70,7 +89,7 @@ function DropHero(episode) {
         if (pos > next_drop['at']) {
             drop_index += 1;
             if (drop_index < drops.length) {
-                next_drop = drops;
+                next_drop = drops[drop_index];
             } else {
                 next_drop = false;
             }
@@ -80,12 +99,17 @@ function DropHero(episode) {
     this.show_buttons = function() {
         var choices = [next_drop['drop']];
         if (next_drop['alts']) {
-            choices.push.apply(next_drop['alts']);
+            choices.push.apply(choices, next_drop['alts']);
         }
 
         if (choices.length < 4) {
-            for(var i = choices.length-1; i < 4; i++) {
-                choices.push("other");
+            extra = this.unique(this.shuffle(all_drops));
+            extra = extra.filter( function( el ) {
+                return choices.indexOf( el ) < 0;
+            });
+
+            for(var i = choices.length; i < 4; i++) {
+                choices.push(extra.pop());
             }
         }
         
@@ -93,25 +117,25 @@ function DropHero(episode) {
         for(var i = 0; i < choices.length; i++) {
             $('#button_' + i).html(choices[i]);
         }
-        
-        $('#buttons').slideDown();
+
+        $('.buttons').show();
         buttons_showing = true;
     };
 
     this.hide_buttons = function() {
-        $('#buttons').slideUp();
+        $('.buttons').hide();
         buttons_showing = false;        
     };
 
     this.start_game = function() {
         var self = this;
+
+        // is this the right way to do this?!  Seems to work...
         if (!this.ready()) {
-            console.log("NOT READY YET...");
             setTimeout(function() { self.start_game() }, 500);
             return;
         }
-        console.log("READY!");
-        
+
         pod.play();
 
         progressbar.progressbar({
@@ -131,7 +155,7 @@ function DropHero(episode) {
         setInterval(
             (function (self) {
                 return function() { self.do_tick() }
-            })(this), 100);
+            })(this), 500);
     };
 
     this.pause = function() { pod.pause() };
@@ -140,6 +164,8 @@ function DropHero(episode) {
     this.vol_down = function() { pod.volume(pod.volume() - 0.1) };            
 
     this.ready = function () {
+        // wait for the Howl object to get loaded, when it's defined
+        // we're ready to go
         if (pod) {
             return true;
         } else {
